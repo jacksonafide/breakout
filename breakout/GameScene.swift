@@ -13,6 +13,7 @@ let BallCategoryName = "ball"
 let PaddleCategoryName = "paddle"
 let BlockCategoryName = "block"
 let GameMessageName = "gameMessage"
+let ScoreLabelName = "scoreLabel"
 
 let BallCategory   : UInt32 = 0x1 << 0
 let BottomCategory : UInt32 = 0x1 << 1
@@ -21,6 +22,14 @@ let PaddleCategory : UInt32 = 0x1 << 3
 let BorderCategory : UInt32 = 0x1 << 4
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    let scoreLabel = SKLabelNode(fontNamed: "Chalkduster")
+    
+    var score: Int = 0 {
+        didSet {
+            scoreLabel.text = "Score: " + String(score)
+        }
+    }
+    
     lazy var gameState: GKStateMachine = GKStateMachine(states: [WaitingForTap(scene: self), Playing(scene: self), GameOver(scene: self)])
     
     var gameWon : Bool = false {
@@ -43,6 +52,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
         physicsWorld.contactDelegate = self
         
+        scoreLabel.text = "Score: " + String(score)
+        scoreLabel.position = CGPoint(x: frame.midX, y: 806)
+        addChild(scoreLabel)
+        
         let ball = childNode(withName: BallCategoryName) as! SKSpriteNode
         ball.physicsBody!.categoryBitMask = BallCategory
         ball.physicsBody!.contactTestBitMask = BottomCategory | BlockCategory
@@ -56,20 +69,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(bottom)
         bottom.physicsBody!.categoryBitMask = BottomCategory
         
-        let numberOfRows = Int.random(in: 5...9)
-        let blockWidth = SKSpriteNode(imageNamed: "block").size.width
-        let blockHeight = SKSpriteNode(imageNamed: "block").size.height
+        let numberOfRows = Int.random(in: 10...15)
+        let blockWidth = SKSpriteNode(imageNamed: "blockBlue").size.width
+        let blockHeight = SKSpriteNode(imageNamed: "blockBlue").size.height
         
         for r in 0..<numberOfRows {
             let numberOfBlocks = Int.random(in: 1...7)
-            
             let totalBlocksWidth = blockWidth * CGFloat(numberOfBlocks)
-            
             let xOffset = (frame.size.width - totalBlocksWidth) / 2
-            
+            let color = getColor()
             for i in 0..<numberOfBlocks {
-                let block = SKSpriteNode(imageNamed: "block")
-                block.position = CGPoint(x: xOffset + CGFloat(CGFloat(i) + 0.5) * blockWidth, y: frame.height * 0.9 - blockHeight * CGFloat(r))
+                let block = SKSpriteNode(imageNamed: color)
+                block.position = CGPoint(x: xOffset + CGFloat(CGFloat(i) + 0.5) * blockWidth, y: frame.height * 0.85 - blockHeight * CGFloat(r))
                 block.physicsBody = SKPhysicsBody(rectangleOf: block.frame.size)
                 block.physicsBody?.allowsRotation = false
                 block.physicsBody?.friction = 0.0
@@ -90,6 +101,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(gameMessage)
         
         gameState.enter(WaitingForTap.self)
+    }
+    
+    func getColor() -> String {
+        let randomNumber = Int.random(in: 1...100)
+        if randomNumber <= 20 {
+            return "blockBlue"
+        } else if randomNumber >= 21 && randomNumber <= 40{
+            return "blockRed"
+        } else if randomNumber >= 41 && randomNumber <= 60{
+            return "blockGreen"
+        } else if randomNumber >= 61 && randomNumber <= 80 {
+            return "blockYellow"
+        } else {
+            return "blockPurple"
+        }
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
@@ -121,6 +147,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func breakBlock(node: SKNode) {
+        score += 100
         node.removeFromParent()
     }
     

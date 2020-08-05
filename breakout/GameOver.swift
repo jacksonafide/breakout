@@ -13,8 +13,8 @@ class GameOver: GKState {
     unowned let scene: GameScene
 
     init(scene: SKScene) {
-    self.scene = scene as! GameScene
-    super.init()
+        self.scene = scene as! GameScene
+        super.init()
     }
 
     override func didEnter(from previousState: GKState?) {
@@ -26,7 +26,7 @@ class GameOver: GKState {
     }
 
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
-    return stateClass is WaitingForTap.Type
+        return stateClass is WaitingForTap.Type
     }
 
 }
