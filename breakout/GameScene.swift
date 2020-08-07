@@ -11,22 +11,49 @@ import GameplayKit
 
 let BallCategoryName = "ball"
 let PaddleCategoryName = "paddle"
-let BlockCategoryName = "block"
+let BlockBlueCategoryName = "blockBlue"
+let BlockRedCategoryName = "blockRed"
+let BlockGreenCategoryName = "blockGreen"
+let BlockYellowCategoryName = "blockYellow"
+let BlockPurpleCategoryName = "blockPurple"
 let GameMessageName = "gameMessage"
 let ScoreLabelName = "scoreLabel"
+let PowerUpLName = "powerUpLength"
+let PowerDownLName = "powerDownLength"
+let PowerUpSName = "powerUpSpeed"
+let PowerDownSName = "powerDownSpeed"
+let PowerUpLifeName = "powerUpLife"
 
 let BallCategory   : UInt32 = 0x1 << 0
 let BottomCategory : UInt32 = 0x1 << 1
 let BlockCategory  : UInt32 = 0x1 << 2
 let PaddleCategory : UInt32 = 0x1 << 3
-let BorderCategory : UInt32 = 0x1 << 4
+let PowerUpCategory : UInt32 = 0x1 << 4
+let BorderCategory : UInt32 = 0x1 << 5
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    let scoreText = SKLabelNode(fontNamed: "Chalkduster")
     let scoreLabel = SKLabelNode(fontNamed: "Chalkduster")
+    let livesLabel = SKLabelNode(fontNamed: "Chalkduster")
+    
+    var isInvul: Bool = false
+    var isInvulTime: TimeInterval = 0
+    
+    var lives: Int = 0 {
+        didSet {
+            livesLabel.text = "Lives: " + String(lives)
+        }
+    }
     
     var score: Int = 0 {
         didSet {
-            scoreLabel.text = "Score: " + String(score)
+            if score > 1000 {
+                scoreLabel.position = CGPoint(x: (frame.width / 4) * 2 - 30, y: frame.height * 0.9)
+                scoreLabel.text = String(score)
+            } else {
+                scoreLabel.position = CGPoint(x: (frame.width / 4) * 2 - 30, y: frame.height * 0.9)
+                scoreLabel.text = String(score)
+            }
         }
     }
     
@@ -43,6 +70,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func getColor() -> String {
+        let randomNumber = Int.random(in: 1...100)
+        if randomNumber <= 20 {
+            return "blockBlue"
+        } else if randomNumber >= 21 && randomNumber <= 40{
+            return "blockRed"
+        } else if randomNumber >= 41 && randomNumber <= 60{
+            return "blockGreen"
+        } else if randomNumber >= 61 && randomNumber <= 80 {
+            return "blockYellow"
+        } else {
+            return "blockPurple"
+        }
+    }
+    
     override func didMove(to view: SKView) {
         let borderBody = SKPhysicsBody(edgeLoopFrom: self.frame)
         borderBody.categoryBitMask = BorderCategory
@@ -52,22 +94,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.0)
         physicsWorld.contactDelegate = self
         
-        scoreLabel.text = "Score: " + String(score)
-        scoreLabel.position = CGPoint(x: frame.midX, y: 806)
+        scoreText.text = "Score: "
+        scoreText.fontSize = 28
+        scoreText.position = CGPoint(x: (frame.width / 4) - 25, y: frame.height * 0.9)
+        addChild(scoreText)
+        
+        scoreLabel.text = String(score)
+        scoreLabel.fontSize = 28
+        scoreLabel.position = CGPoint(x: (frame.width / 4) * 2 - 50, y: frame.height * 0.9)
         addChild(scoreLabel)
+        
+        livesLabel.text = "Lives: " + String(lives)
+        livesLabel.fontSize = 28
+        livesLabel.position = CGPoint(x: (frame.width / 4) * 3, y: frame.height * 0.9)
+        addChild(livesLabel)
         
         let ball = childNode(withName: BallCategoryName) as! SKSpriteNode
         ball.physicsBody!.categoryBitMask = BallCategory
         ball.physicsBody!.contactTestBitMask = BottomCategory | BlockCategory
+        ball.physicsBody!.collisionBitMask = 46
+        ball.physicsBody!.usesPreciseCollisionDetection = true
         
         let paddle = childNode(withName: PaddleCategoryName) as! SKSpriteNode
         paddle.physicsBody!.categoryBitMask = PaddleCategory
+        paddle.physicsBody!.contactTestBitMask = PowerUpCategory
         
         let bottomRect = CGRect(x: frame.origin.x, y: frame.origin.y, width: frame.size.width, height: 1)
         let bottom = SKNode()
         bottom.physicsBody = SKPhysicsBody(edgeLoopFrom: bottomRect)
-        addChild(bottom)
         bottom.physicsBody!.categoryBitMask = BottomCategory
+        bottom.physicsBody!.usesPreciseCollisionDetection = true
+        addChild(bottom)
         
         let numberOfRows = Int.random(in: 10...15)
         let blockWidth = SKSpriteNode(imageNamed: "blockBlue").size.width
@@ -86,7 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 block.physicsBody?.friction = 0.0
                 block.physicsBody?.affectedByGravity = false
                 block.physicsBody?.isDynamic = false
-                block.name = BlockCategoryName
+                block.name = color
                 block.physicsBody?.categoryBitMask = BlockCategory
                 block.zPosition = 2
                 addChild(block)
@@ -103,19 +160,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameState.enter(WaitingForTap.self)
     }
     
-    func getColor() -> String {
-        let randomNumber = Int.random(in: 1...100)
-        if randomNumber <= 20 {
-            return "blockBlue"
-        } else if randomNumber >= 21 && randomNumber <= 40{
-            return "blockRed"
-        } else if randomNumber >= 41 && randomNumber <= 60{
-            return "blockGreen"
-        } else if randomNumber >= 61 && randomNumber <= 80 {
-            return "blockYellow"
-        } else {
-            return "blockPurple"
-        }
+    func genPaddlePhysics(paddle: SKSpriteNode) {
+        paddle.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: paddle.size.width, height: paddle.size.height))
+        paddle.physicsBody!.isDynamic = false
+        paddle.physicsBody!.categoryBitMask = PaddleCategory
+        paddle.physicsBody!.contactTestBitMask = PowerUpCategory
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
@@ -132,8 +181,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             
             if firstBody.categoryBitMask == BallCategory && secondBody.categoryBitMask == BottomCategory {
-                gameState.enter(GameOver.self)
-                gameWon = false
+                if isInvul == false {
+                    if lives == 0 {
+                        gameState.enter(GameOver.self)
+                        gameWon = false
+                    } else {
+                        lives -= 1
+                        isInvul = true
+                    }
+                }
             }
             
             if firstBody.categoryBitMask == BallCategory && secondBody.categoryBitMask == BlockCategory {
@@ -143,11 +199,85 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     gameWon = true
                 }
             }
+            
+            if firstBody.categoryBitMask == PaddleCategory && secondBody.categoryBitMask == PowerUpCategory {
+                if secondBody.node!.name == PowerUpLName {
+                    let paddle = childNode(withName: PaddleCategoryName) as! SKSpriteNode
+                    if paddle.size.width < frame.size.width * 0.4 {
+                        paddle.size.width = paddle.size.width * 1.25
+                        genPaddlePhysics(paddle: paddle)
+                    }
+                } else if secondBody.node!.name == PowerDownLName {
+                    let paddle = childNode(withName: PaddleCategoryName) as! SKSpriteNode
+                    if paddle.size.width > 40.0 {
+                        paddle.size.width = paddle.size.width * 0.75
+                        genPaddlePhysics(paddle: paddle)
+                    }
+                } else if secondBody.node!.name == PowerUpSName {
+                    let ball = childNode(withName: BallCategoryName) as! SKSpriteNode
+                    ball.physicsBody?.velocity = CGVector(dx: ball.physicsBody!.velocity.dx * 1.25, dy: ball.physicsBody!.velocity.dy * 1.25)
+                } else if secondBody.node!.name == PowerDownSName {
+                    let ball = childNode(withName: BallCategoryName) as! SKSpriteNode
+                    ball.physicsBody?.velocity = CGVector(dx: ball.physicsBody!.velocity.dx * 0.75, dy: ball.physicsBody!.velocity.dy * 0.75)
+                } else if secondBody.node!.name == PowerUpLifeName {
+                    lives += 1
+                }
+                breakObject(node: secondBody.node!)
+            }
+        }
+    }
+    
+    func choosePowerUp(number: Int, node: SKNode) {
+        switch number {
+        case 1...22:
+            generatePowerUp(node: node, imageName: "powerUpLength", name: PowerUpLName)
+        case 23...45:
+            generatePowerUp(node: node, imageName: "powerDownLength", name: PowerDownLName)
+        case 46...66:
+            generatePowerUp(node: node, imageName: "powerUpSpeed", name: PowerUpSName)
+        case 67...90:
+            generatePowerUp(node: node, imageName: "powerDownSpeed", name: PowerDownSName)
+        case 91...100:
+            generatePowerUp(node: node, imageName: "powerUpLife", name: PowerUpLifeName)
+        default:
+            break
+        }
+    }
+    
+    func generatePowerUp(node: SKNode, imageName: String, name: String) {
+        let powerUp = SKSpriteNode(imageNamed: imageName)
+        powerUp.scale(to: CGSize(width: powerUp.size.width * 1.35, height: powerUp.size.height * 1.35))
+        powerUp.name = name
+        powerUp.position = node.position
+        powerUp.zPosition = 3
+        powerUp.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: powerUp.size.width, height: powerUp.size.height))
+        powerUp.physicsBody?.allowsRotation = false
+        powerUp.physicsBody?.friction = 0.0
+        powerUp.physicsBody?.categoryBitMask = PowerUpCategory
+        powerUp.physicsBody?.collisionBitMask = 8
+        powerUp.physicsBody?.applyImpulse(CGVector(dx: 0.0, dy: -2.0))
+        powerUp.physicsBody?.velocity = CGVector(dx: 0.0, dy: -500.0)
+        addChild(powerUp)
+    }
+
+    func chance(percent: Int) -> Bool {
+        let random = Int.random(in: 0...100)
+        if random < percent {
+            return true
+        } else {
+            return false
         }
     }
     
     func breakBlock(node: SKNode) {
         score += 100
+        if chance(percent: 10) {
+            choosePowerUp(number: Int.random(in: 1...100), node: node)
+        }
+        node.removeFromParent()
+    }
+    
+    func breakObject(node: SKNode) {
         node.removeFromParent()
     }
     
@@ -158,9 +288,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func isGameWon() -> Bool {
         var numberOfBricks = 0
-        self.enumerateChildNodes(withName: BlockCategoryName) {
-            node, stop in
-            numberOfBricks = numberOfBricks + 1
+        let listOfBlocks = [BlockBlueCategoryName, BlockRedCategoryName, BlockGreenCategoryName, BlockYellowCategoryName, BlockPurpleCategoryName]
+        for block in listOfBlocks {
+            self.enumerateChildNodes(withName: block) {
+                node, stop in
+                numberOfBricks = numberOfBricks + 1
+            }
         }
         return numberOfBricks == 0
     }
@@ -203,6 +336,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
+        if isInvul == true {
+            isInvulTime += currentTime
+        }
+        if isInvulTime > 3 {
+            isInvul = false
+            isInvulTime = 0
+        }
         gameState.update(deltaTime: currentTime)
     }
 }

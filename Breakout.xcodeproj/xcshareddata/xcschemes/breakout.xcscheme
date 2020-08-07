@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "04B10E4724D97AC50022FF67"
-               BuildableName = "breakout.app"
+               BuildableName = "Breakout.app"
                BlueprintName = "breakout"
-               ReferencedContainer = "container:breakout.xcodeproj">
+               ReferencedContainer = "container:Breakout.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04B10E4724D97AC50022FF67"
-            BuildableName = "breakout.app"
+            BuildableName = "Breakout.app"
             BlueprintName = "breakout"
-            ReferencedContainer = "container:breakout.xcodeproj">
+            ReferencedContainer = "container:Breakout.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "04B10E4724D97AC50022FF67"
-            BuildableName = "breakout.app"
+            BuildableName = "Breakout.app"
             BlueprintName = "breakout"
-            ReferencedContainer = "container:breakout.xcodeproj">
+            ReferencedContainer = "container:Breakout.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
