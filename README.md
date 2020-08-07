@@ -5,7 +5,6 @@ A simple Arkanoid/Breakout type game written using Swift and SpriteKit.
 <p float = "left">
   <img src = "https://github.com/jacksonafide/breakout/blob/master/images/mainUI.png" width = "25%" height = "25%"/>
   <img src = "https://github.com/jacksonafide/breakout/blob/master/images/inGame1.png" width = "25%" height = "25%"/>
-  <img src = "https://github.com/jacksonafide/breakout/blob/master/images/inGame2.png" width = "25%" height = "25%"/>
   <img src = "https://github.com/jacksonafide/breakout/blob/master/images/winScreen.png" width = "25%" height = "25%"/>
 </p>
 
